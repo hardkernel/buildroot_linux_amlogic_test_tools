@@ -1,0 +1,7 @@
+ssid=chrysalis_5G
+password=buyaocaimima256
+driver=ath10k_pci
+mode=station
+onoff_test=0
+retry=5
+debug=1
