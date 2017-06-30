@@ -44,7 +44,7 @@ info_view()
 
 gpio_irq_test()
 {
-    /test_plan/gpio/gpio -t irq -e  ${E_INPUT}  -o {O_INPUT} -i ${I_INPUT}
+    /test_plan/gpio/gpio -t irq -e  ${E_INPUT}  -o ${O_INPUT} -i ${I_INPUT}
 }
 
 gpio_pio_test()

@@ -7,7 +7,7 @@ RESULT_LOG_PCIE=${RESULT_DIR}/pcie_wifi.log
 sdio_wifi()
 {
     cat /test_plan/wifi/wifi_configure.txt | grep "driver=dhd"
-    if [ $? -nne 0 ]
+    if [ $? -ne 0 ]
     then
         sed -i 's/^driver=ath10k_pci/driver=dhd/g' /test_plan/wifi/wifi_configure.txt
         sync
@@ -21,7 +21,7 @@ sdio_wifi()
 pcie_wifi()
 {
     cat /test_plan/wifi/wifi_configure.txt | grep "driver=ath10k_pci"
-    if [ $? -nne 0 ]
+    if [ $? -ne 0 ]
     then
         sed -i 's/^driver=dhd/driver=ath10k_pci/g' /test_plan/wifi/wifi_configure.txt
         sync
