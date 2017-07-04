@@ -7,7 +7,21 @@ TARGET_OP=NULL
 TARGET_PER=NULL
 
 MULT_IMG=/mnt/
+LOG_FILE=/test_log/mult_uboot/mult_uboot.log
 
+###########################
+## log handle
+###########################
+log_init()
+{
+	#check file exit or not
+	ls ${LOG_FILE}
+	if [ $? -ne 0 ]
+	then
+		mkdir -p /test_log/mult_uboot/
+		touch ${LOG_FILE}
+	fi
+}
 
 ###########################
 ## read_u_env_value
@@ -132,7 +146,11 @@ download_uboot_all()
 error_control()
 {
     #lava-test-case SYSTEM  --result fail
-    echo "test error"
+    echo "error: $1" >> ${LOG_FILE}
+	echo "**************************test result*****************************"
+	cat ${LOG_FILE}
+	echo "******************************************************************"
+
 }
 
 write_value_to_env()
@@ -188,7 +206,10 @@ env_value_change()
 
     #write value to env
     write_value_to_env 
-
+	
+	#log handle
+	echo "next process: TARGET:$1 TARGET_OP:$2 TARGET_PER:$3" >> ${LOG_FILE}
+	
 	#release u disk 
 	umount /mnt
 	sync
@@ -228,11 +249,11 @@ bl2_erase()
             env_value_change BL2 erase 8
             ;;
         8)
-			echo "bl2 erase sucess..................................."
+			echo "bl2 erase sucess..................................." >> ${LOG_FILE}
             env_value_change BL2 baddata  1 ALL
             ;;
         *)
-            error_control
+            error_control bl2_erase
             ;;
     esac
 }
@@ -276,11 +297,11 @@ bl2_baddata()
             env_value_change BL2 baddata 8
             ;;
         8)
-		echo "bl2 baddata sucess..................................."
+		echo "bl2 baddata sucess..................................." >> ${LOG_FILE}
             env_value_change BL2 halfdata  1 ALL
             ;;
         *)
-            error_control
+            error_control bl2_baddata
             ;;
     esac
 }
@@ -324,11 +345,11 @@ bl2_halfdata()
             env_value_change BL2 halfdata 8
             ;;
         8)
-			echo "bl2 halfdata sucess..................................."
+			echo "bl2 halfdata sucess..................................." >> ${LOG_FILE}
             env_value_change TPL erase  1 ALL
             ;;
         *)
-            error_control
+            error_control bl2_halfdata
             ;;
     esac
 }
@@ -345,7 +366,7 @@ bl2_operation()
             bl2_halfdata
             ;;
         *)
-            error_control
+            error_control bl2_operation
             ;;
     esac
 }
@@ -366,11 +387,11 @@ tpl_erase()
             env_value_change TPL erase 4
             ;;
         4)
-			echo "tpl erase sucess..................................."
+			echo "tpl erase sucess..................................." >> ${LOG_FILE}
             env_value_change TPL baddata 1 ALL
             ;;
         *)
-            error_control
+            error_control tpl_erase
             ;;
     esac
 }
@@ -394,11 +415,11 @@ tpl_baddata()
             env_value_change TPL baddata 4
             ;;
         4)
-			echo "tpl baddata sucess..................................."
+			echo "tpl baddata sucess..................................." >> ${LOG_FILE}
             env_value_change TPL halfdata 1 ALL
             ;;
         *)
-            error_control
+            error_control tpl_baddata
             ;;
    esac
 }
@@ -441,13 +462,17 @@ tpl_halfdata()
             env_value_change TPL halfdata 4
             ;;
         4)
-		echo "tpl halfdata sucess..................................."
+		echo "tpl halfdata sucess..................................." >> ${LOG_FILE}
           #lava_success
            #erase_all
-           rm /test_plan/mult_uboot/reboot_flag
+		   rm /test_plan/mult_uboot/reboot_flag
+		   rm /mnt/mult_uboot_flag_file
+		   echo "**************************test result*****************************"
+		   cat ${LOG_FILE}
+		   echo "******************************************************************"
             ;;
         *)
-			echo "unknow error."
+			error_control tpl_halfdata
             ;;
     esac
 }
@@ -465,7 +490,7 @@ tpl_operation()
             tpl_halfdata
             ;;
         *)
-            error_control
+            error_control tpl_operation
             ;;
     esac
 }
@@ -528,6 +553,9 @@ fi
 umount /mnt
 echo "to here"
 
+#log init
+log_init
+#u disk init
 env_u_disk_to_value
 
 if [ "${ALL_FLAG}" == "ALL"  ]
@@ -544,7 +572,7 @@ else
         tpl_operation
         ;;
     *)
-        error_control
+        error_control bl2_tpl_target_operation
         ;;
     esac
 fi

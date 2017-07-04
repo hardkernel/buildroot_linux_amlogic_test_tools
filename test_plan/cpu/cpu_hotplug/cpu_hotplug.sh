@@ -21,12 +21,19 @@ echo "**********************"
 echo "please input off or on: eg : 0"
 read -t 30  CPU_ON_OFF
 
-echo ${CPU_ON_OFF} /sys/devices/system/cpu/cpu${CPU_NUMBER}/online
-if [ $? -ne 0 ]
+#error check
+on_off_value=`cat /sys/devices/system/cpu/cpu${CPU_NUMBER}/online`
+if [ ${on_off_value} -eq  ${CPU_ON_OFF} ]
 then
-    echo "cpu_hotplug=failure" >> ${RESULT_LOG}
+	echo "reset cpu${CPU_NUMBER} failure."
+	echo "cpu${CPU_NUMBER} is ${on_off_value}, please reset your value."
 else
-    echo "cpu_hotplug=success" >> ${RESULT_LOG}
+	echo ${CPU_ON_OFF} /sys/devices/system/cpu/cpu${CPU_NUMBER}/online
+	if [ $? -ne 0 ]
+	then
+    	echo "cpu_hotplug=failure" >> ${RESULT_LOG}
+	else
+    	echo "cpu_hotplug=success" >> ${RESULT_LOG}
+	fi
 fi
-
 cat ${RESULT_LOG}
