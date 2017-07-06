@@ -9,7 +9,8 @@ router_ip="192.168.168.1"
 ping_period="4"
 retry="1"
 onoff_test="0"
-
+s400_arg="firmware_path=/etc/wifi/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/nvram.txt"
+s420_arg="firmware_path=/etc/wifi/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/nvram.txt"
 
 NAME1=wpa_supplicant
 DAEMON1=/usr/sbin/$NAME1
@@ -145,7 +146,23 @@ if [ $1 = "0" ];then
 	done
 else
 	echo "start driver loading..."
-	modprobe $driver
+	if [ "$mode" == "ap" -o "$driver" == "dhd" ];then
+		#sure s400 
+		cat /proc/device-tree/amlogic-dt-id | grep "s400"
+		if [ $? -eq 0 ]
+		then
+			modprobe $driver $s400_arg
+		fi
+		# sure s420
+		cat /proc/device-tree/amlogic-dt-id | grep "s420"
+		if [ $? -eq 0 ]
+		then
+			modprobe $driver $s420_arg
+		fi
+	else
+		modprobe $driver
+	fi
+		
 	if [ $? -eq 0 ]; then
 		echo "dirver loaded"
 	else
