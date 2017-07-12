@@ -17,7 +17,12 @@ echo "**************************************"
 
 
 mkdir -p ${RESULT_DIR}
+echo "**********************CPU HOTPLUG TEST****************************"  > ${RESULT_LOG}
+echo "######## cpu hotplug #######"
+sleep 2
 
+:<<!
+# interaction test 
 
 echo "######## cpu hotplug #######"
 echo "you want operation which cpu"
@@ -93,4 +98,177 @@ else
     	echo "cpu_hotplug=success" >> ${RESULT_LOG}
 	fi
 fi
-cat ${RESULT_LOG}
+!
+
+ERR=0
+ALL_ERR=0
+#error check 
+error_check()
+{
+	if [ $1 -ne 0 ]
+	then
+		echo "$2_$3=failure" >> ${RESULT_LOG}
+		let ALL_ERR+=1
+	else
+		echo "$2_$3=success" >> ${RESULT_LOG}
+	fi
+}
+
+option_work()
+{
+	OPTION_NAME=NONE
+	case $2 in
+		1)
+			OPTION_NAME=OPEN		
+		;;
+		0)
+			OPTION_NAME=OFF
+		;;
+	esac
+	
+	#error check
+	on_off_value=`cat /sys/devices/system/cpu/cpu$1/online`
+	if [ ${on_off_value} -eq  $2 ]
+	then
+		echo "cpu$1_${OPTION_NAME}=failure (cpu$1 value is $2 now. don't to set $2 to cpu$1.)" >> ${RESULT_LOG}
+		let ${ERR}+=1
+	else
+		echo $2 > /sys/devices/system/cpu/cpu$1/online
+		if [ $? -ne 0 ]
+		then
+			echo "cpu$1_${OPTION_NAME}=failure" >> ${RESULT_LOG}
+			let ${ERR}+=1
+		fi
+	fi	
+}
+
+# off cpu
+option_cpu()
+{
+	echo "cpu:    $1"
+	echo "option: $2"
+	case $2 in
+		"on")
+			option_work $1 1 
+			;;
+		"off")
+			option_work $1 0
+			;;
+		*)
+			echo "not fount this option."
+		;;
+	esac
+}
+
+one_cpu_pressure_option()
+{
+	cpu_arr="0 1 2 3"
+	for data in ${cpu_arr}
+	do
+		option_cpu ${data} off
+		option_cpu ${data} on
+	done
+}
+
+#case 1: one cpu
+one_cpu_pressure()
+{
+	count=0
+	test_count=100
+	ERR=0
+	echo "one cpu pressure 100 count: ing"
+	sleep 2
+	while [  ${count} -lt ${test_count} ]
+	do
+		one_cpu_pressure_option
+		let count+=1
+	done
+	
+	error_check ${ERR} one_cpu_pressure  ${test_count}
+}
+
+two_cpu_pressure_option()
+{
+	option_cpu $1 off
+	option_cpu $2 off
+	
+	option_cpu $1 on
+	option_cpu $2 on
+}
+
+#case 2: two cpu
+two_cpu_pressure()
+{
+	count=0
+	test_count=100
+	ERR=0
+	echo "two cpu pressure 100 count: ing"
+	sleep 2	
+	while [ ${count} -lt ${test_count} ]
+	do
+		two_cpu_pressure_option 0 1
+		two_cpu_pressure_option 0 2
+		two_cpu_pressure_option 0 3
+	
+		two_cpu_pressure_option 1 2
+		two_cpu_pressure_option 1 3
+	
+		two_cpu_pressure_option 2 3
+		let count+=1
+	done
+	
+	error_check ${ERR} two_cpu_pressure  ${test_count}
+}
+
+three_cpu_pressure_option()
+{
+	option_cpu $1 off
+	option_cpu $2 off
+	option_cpu $3 off
+	
+	option_cpu $1 on
+	option_cpu $2 on
+	option_cpu $3 on
+}
+
+#case 3: three cpu
+three_cpu_pressure()
+{
+	count=0
+	test_count=100
+	ERR=0
+	echo "one cpu pressure 100 count: ing"
+	sleep 2	
+	while [ ${count} -lt ${test_count} ]
+	do
+		three_cpu_pressure_option 0 1 2
+		three_cpu_pressure_option 0 1 3
+		
+		three_cpu_pressure_option 1 2 3
+		let count+=1
+	done
+	
+	error_check ${ERR} three_cpu_pressure  ${test_count}
+}
+
+pressure_on_off_cpu()
+{
+	#case 1: one cpu
+	one_cpu_pressure
+	#case 2: two cpu
+	two_cpu_pressure
+	#case 3: three cpu
+	three_cpu_pressure
+
+	#error check
+	if [ ${ALL_ERR} -ne 0 ]
+	then
+		echo "cpu_hotplug=failure" >> ${RESULT_LOG}
+	fi
+	
+	cat ${RESULT_LOG}
+	
+}
+
+pressure_on_off_cpu
+
