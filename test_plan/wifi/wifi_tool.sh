@@ -146,7 +146,7 @@ if [ $1 = "0" ];then
 	done
 else
 	echo "start driver loading..."
-	if [ "$mode" == "ap" -o "$driver" == "dhd" ];then
+	if [ "$mode" == "ap" -a "$driver" == "dhd" ];then
 		#sure s400 
 		cat /proc/device-tree/amlogic-dt-id | grep "s400"
 		if [ $? -eq 0 ]
