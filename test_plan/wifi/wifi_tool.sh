@@ -9,8 +9,10 @@ router_ip="192.168.168.1"
 ping_period="4"
 retry="1"
 onoff_test="0"
-s400_arg="firmware_path=/etc/wifi/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/nvram.txt"
-s420_arg="firmware_path=/etc/wifi/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/nvram.txt"
+ap_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/6255/nvram.txt"
+ap_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/4356/nvram.txt"
+station_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag.bin nvram_path=/etc/wifi/6255/nvram.txt"
+station_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag.bin nvram_path=/etc/wifi/4356/nvram.txt"
 
 NAME1=wpa_supplicant
 DAEMON1=/usr/sbin/$NAME1
@@ -130,6 +132,8 @@ if [ ! $debug -eq 1 ]; then
 fi
 }
 
+
+
 function load_driver() {
 if [ $1 = "0" ];then
 	echo "removing driver if loaded"
@@ -146,23 +150,26 @@ if [ $1 = "0" ];then
 	done
 else
 	echo "start driver loading..."
+	HW_PLATFORM=$(cat /proc/device-tree/amlogic-dt-id | awk -F "_" '{print $2}')
 	if [ "$mode" == "ap" -a "$driver" == "dhd" ];then
-		#sure s400 
-		cat /proc/device-tree/amlogic-dt-id | grep "s400"
-		if [ $? -eq 0 ]
+		if [ "${HW_PLATFORM}" == "s400" ]
 		then
-			modprobe $driver $s400_arg
-		fi
-		# sure s420
-		cat /proc/device-tree/amlogic-dt-id | grep "s420"
-		if [ $? -eq 0 ]
-		then
-			modprobe $driver $s420_arg
-		fi
+			modprobe $driver $ap_s400
+        elif [ "${HW_PLATFORM}" == "s420" ]
+        then
+			modprobe $driver $ap_s420
+        fi
+
 	else
-		modprobe $driver
+		if [ "${HW_PLATFORM}" == "s400" ]
+		then
+			modprobe $driver $station_s400
+        elif [ "${HW_PLATFORM}" == "s420" ]
+        then
+			modprobe $driver $station_s420 
+        fi
 	fi
-		
+
 	if [ $? -eq 0 ]; then
 		echo "dirver loaded"
 	else
