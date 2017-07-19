@@ -6,9 +6,12 @@ mode="station"
 config_file="/test_plan/wifi/wifi_configure.txt"
 driver_list="dhd ath10k_pci"
 router_ip="192.168.168.1"
+router_connted="no"
+ap_ip="192.168.2.1"
 ping_period="4"
 retry="1"
 onoff_test="0"
+debug="0"
 ap_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/6255/nvram.txt"
 ap_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/4356/nvram.txt"
 station_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag.bin nvram_path=/etc/wifi/6255/nvram.txt"
@@ -62,7 +65,42 @@ else
 fi
 }
 
+function start_bridge() {
 
+echo "starting bridge.."
+ifconfig eth0 0.0.0.0
+ifconfig wlan0 0.0.0.0
+#####create new br0##############
+brctl addbr br0
+brctl addif br0 eth0
+#brctl addif br0 wlan0
+if [ $? -eq 1 ];then
+	echo "fail to add bridge"
+	return;
+fi
+ifconfig br0 up
+
+echo "starting br0 dhcp..."
+if [ $debug -eq 1 ];then
+dhcpcd br0 -t 15
+else
+dhcpcd br0 -t 15 > /dev/null
+fi
+
+ping_test br0
+if [ "$router_connted" = "yes" ];then
+	echo "bridge finish!!"
+else
+	echo "connet router failed"
+fi
+}
+
+function start_eth() {
+	ifconfig eth0 down > /dev/null
+	sleep 1
+	ifconfig eth0 up
+	sleep 2
+}
 
 
 function initial_configure() {
@@ -198,6 +236,14 @@ sleep 1
 echo "Stopp prv dhcpcd first"
 start-stop-daemon -K -o -p $PIDFILE4 2> /dev/null
 sleep 1
+echo "delete prv br0"
+ifconfig | grep br0 > /dev/null
+if [ $? -eq 0 ];then
+	ifconfig br0 down > /dev/null
+	brctl delbr br0
+fi
+sleep 1
+
 }
 
 function usage() {
@@ -265,6 +311,11 @@ while [ $cnt -lt $1 ]; do
         continue
     fi   
 done
+##return here if no matter###
+if [ "$2" = "check_eth" ];then
+	return
+fi
+
 echo "fail!!"
 end_script
 }
@@ -304,12 +355,23 @@ function start_wifi() {
 echo "########starting wifi#####################"
 ###############load wifi driver##################
 load_driver 1
-#####stop wpa_supplicant hostapd dhcpcd dnsamas##
+#####start wpa_supplicant hostapd dhcpcd dnsamasq bridge##
 
 if [ "${mode}" = "station" ]; then
 	start_sta
+	ping_test wlan0
 elif [ "${mode}" = "ap" ]; then
+	start_eth
+	start_bridge
 	start_ap
+###if eth0 is conneted to route, we start add wlan0 into bridge####
+###otherwise we use dnsmasq########################################
+    if [ "$router_connted" = "yes" ];then
+		brctl addif br0 wlan0
+	else
+		start_dnsmasq
+	fi
+    echo "ap is started!!"
 else
 	echo "bad mode!"
 	end_script
@@ -353,16 +415,18 @@ echo "start hostpad successfully!!
 if [ ! $debug -eq 1 ];then
 	rm /etc/hostapd_temp.conf
 fi
-###############start dnsmasq#################
-echo "starting dnsmasq..."
-ifconfig wlan0 192.168.2.1
+}
 
-start-stop-daemon -S -m -p $PIDFILE3 -b -x $DAEMON3  -- -iwlan0  --dhcp-option=3,192.168.2.1 --dhcp-range=192.168.2.50,192.168.2.200,12h -p100
+###############start dnsmasq#################
+function start_dnsmasq() {
+echo "starting dnsmasq..."
+ifconfig wlan0 $ap_ip
+echo "ap_ip=$ap_ip"
+
+start-stop-daemon -S -m -p $PIDFILE3 -b -x $DAEMON3  -- -iwlan0  --dhcp-option=3,${ap_ip} --dhcp-range=${ap_ip%.*}.50,${ap_ip%.*}.200,12h -p100
 
 check_in_loop 6 check_dnsmasq
 echo "start dnsmasq successfully!!"
-echo "ap is started!!"
-end_script
 }
 
 ############start wpa_supplicant##########
@@ -371,9 +435,9 @@ echo "starting wpa_supplicant..."
 ifconfig wlan0 0.0.0.0
 
 if [ $debug -eq 1 ];then
-start-stop-daemon -S -m -p $PIDFILE1 -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf -d -B -P $PIDFILE1
+	start-stop-daemon -S -m -p $PIDFILE1 -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf -d -B -P $PIDFILE1
 else
-start-stop-daemon -S -m -p $PIDFILE1 -b -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf 
+	start-stop-daemon -S -m -p $PIDFILE1 -b -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 fi
 check_in_loop 10 check_wpa
 echo "connecting ap ...."
@@ -391,18 +455,17 @@ check_in_loop 10 check_ap_connect
 echo "start wpa_supplicant successfully!!"
 
 ############start dhcp#######################
-echo "starting dhcp..."
+echo "starting wifi dhcp..."
 if [ $debug -eq 1 ];then
 dhcpcd wlan0
 else
 dhcpcd wlan0 > /dev/null
 fi
 echo "ap connected!!"
-ping_test
 }
 
 function ping_test() {
-router_ip=`dhcpcd -U wlan0 2> /dev/null | grep routers | awk -F "=" '{print $2}' | sed "s/'//g"`
+router_ip=`dhcpcd -U $1 2> /dev/null | grep routers | awk -F "=" '{print $2}' | sed "s/'//g"`
 echo "
 now going to ping router's ip: $router_ip for $ping_period seconds"
 ping $router_ip -w $ping_period
@@ -410,6 +473,7 @@ if [ $? -eq 1 ];then
 echo "ping fail!! please check"
 else
 echo "ping successfully"
+router_connted="yes"
 fi
 }
 main $1 $2 $3 $4 $5
