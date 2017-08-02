@@ -16,6 +16,7 @@ ap_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc
 ap_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/4356/nvram.txt"
 station_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag.bin nvram_path=/etc/wifi/6255/nvram.txt"
 station_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag.bin nvram_path=/etc/wifi/4356/nvram.txt"
+ERROR_FLAG=0
 
 NAME1=wpa_supplicant
 DAEMON1=/usr/sbin/$NAME1
@@ -268,14 +269,19 @@ if [ "${1}" = "1" ];then
 elif [ "${1}" = "0" ];then
 	echo 1 > /proc/sys/kernel/printk
 fi
-}                                                               
-        
+}
+
 function end_script() {
 if [ ! $debug -eq 1 ];then
 	enable_printk 1
 fi
-exit
-}		
+if [ ${ERROR_FLAG} -ne 0 ]
+then
+    exit 11
+else
+    exit
+fi
+}
 alias check_wlan="ifconfig wlan0 2> /dev/null"
 alias check_wpa="wpa_cli ping 2> /dev/null | grep PONG"
 alias check_ap_connect="wpa_cli status 2> /dev/null | grep state=COMPLETED"
@@ -309,7 +315,7 @@ while [ $cnt -lt $1 ]; do
         cnt=$((cnt + 1))
         sleep 1
         continue
-    fi   
+    fi
 done
 ##return here if no matter###
 if [ "$2" = "check_eth" ];then
@@ -317,6 +323,7 @@ if [ "$2" = "check_eth" ];then
 fi
 
 echo "fail!!"
+ERROR_FLAG=1
 end_script
 }
 
