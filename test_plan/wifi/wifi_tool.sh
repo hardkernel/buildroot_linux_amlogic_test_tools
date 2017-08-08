@@ -12,10 +12,22 @@ ping_period="4"
 retry="1"
 onoff_test="0"
 debug="0"
-ap_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/6255/nvram.txt"
-ap_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/4356/nvram.txt"
-station_s400="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag.bin nvram_path=/etc/wifi/6255/nvram.txt"
-station_s420="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag.bin nvram_path=/etc/wifi/4356/nvram.txt"
+ap_axg=""
+station_axg=""
+ap_6255="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag_apsta.bin nvram_path=/etc/wifi/6255/nvram.txt"
+station_6255="firmware_path=/etc/wifi/6255/fw_bcm43455c0_ag.bin nvram_path=/etc/wifi/6255/nvram.txt"
+ap_4356="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag_apsta.bin nvram_path=/etc/wifi/4356/nvram.txt"
+station_4356="firmware_path=/etc/wifi/4356/fw_bcm4356a2_ag.bin nvram_path=/etc/wifi/4356/nvram.txt"
+ap_40181="firmware_path=/etc/wifi/40181/fw_bcm40181a2_apsta.bin nvram_path=/etc/wifi/40181/nvram.txt"
+station_40181="firmware_path=/etc/wifi/40181/fw_bcm40181a2.bin nvram_path=/etc/wifi/40181/nvram.txt"
+ap_6335="firmware_path=/etc/wifi/6335/fw_bcm4339a0_ag_apsta.bin nvram_path=/etc/wifi/6335/nvram.txt"
+station_6355="firmware_path=/etc/wifi/6335/fw_bcm4339a0_ag.bin nvram_path=/etc/wifi/6335/nvram.txt"
+ap_6234="firmware_path=/etc/wifi/6234/fw_bcm43341b0_ag_apsta.bin nvram_path=/etc/wifi/6234/nvram.txt"
+station_6234="firmware_path=/etc/wifi/6234/fw_bcm43341b0_ag.bin nvram_path=/etc/wifi/6234/nvram.txt"
+ap_6212="firmware_path=/etc/wifi/6212/fw_bcm43438a0_apsta.bin nvram_path=/etc/wifi/6212/nvram.txt"
+station_6212="firmware_path=/etc/wifi/6212/fw_bcm43438a0.bin nvram_path=/etc/wifi/6212/nvram.txt"
+ap_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag_apsta.bin nvram_path=/etc/wifi/4358/nvram.txt"
+station_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag.bin nvram_path=/etc/wifi/4358/nvram.txt"
 ERROR_FLAG=0
 
 NAME1=wpa_supplicant
@@ -39,6 +51,41 @@ PIDFILE4=/var/run/${NAME4}-wlan0.pid
 ############################################################################################
 ###############Function Zone################################################################
 ############################################################################################
+
+function wifi_dhd_fw_init()
+{
+	code=`cat /sys/bus/mmc/devices/sdio\:0001/sdio\:0001\:1/device`
+    case ${code} in
+		0xa962)
+			ap_axg=${ap_40181}
+			station_axg=${station_40181}
+			;;
+		0x4335)
+			ap_axg=${ap_6355}
+			station_axg=${station_6335}
+			;;
+		0xa94d)
+			ap_axg=${ap_6234}
+			station_axg=${station_6234}
+			;;
+		0xa9bf)
+			ap_axg=${ap_6255}
+			station_axg=${station_6255}
+			;;
+		0xa9a6)
+			ap_axg=${ap_6212}
+			station_axg=${station_6212}
+			;;
+		0x4356)
+			ap_axg=${ap_4356}
+			station_axg=${station_4356}
+			;;
+		0xaa31)
+			ap_axg=${ap_4358}
+			station_axg=${station_4358}
+			;;
+	esac
+}
 
 function main() {
 
@@ -191,22 +238,9 @@ else
 	echo "start driver loading..."
 	HW_PLATFORM=$(cat /proc/device-tree/amlogic-dt-id | awk -F "_" '{print $2}')
 	if [ "$mode" == "ap" -a "$driver" == "dhd" ];then
-		if [ "${HW_PLATFORM}" == "s400" ]
-		then
-			modprobe $driver $ap_s400
-        elif [ "${HW_PLATFORM}" == "s420" ]
-        then
-			modprobe $driver $ap_s420
-        fi
-
+		modprobe $driver $ap_axg
 	else
-		if [ "${HW_PLATFORM}" == "s400" ]
-		then
-			modprobe $driver $station_s400
-        elif [ "${HW_PLATFORM}" == "s420" ]
-        then
-			modprobe $driver $station_s420 
-        fi
+		modprobe $driver $station_axg
 	fi
 
 	if [ $? -eq 0 ]; then
@@ -330,19 +364,26 @@ end_script
 function wifi_onoff_loop() {
 echo "
 #####################################################
-#####begin to turn on/off wifi for $retry times
+#####begin to turn on/off wifi
 #####################################################
 "
 sleep 1
 local cnt=0
-while [ $cnt -lt $retry ]; do
+while true; do
 	start_wifi
 	sleep 2
 	stop_wifi
 	sleep 5
 	cnt=$((cnt + 1))
-	echo "wifi has been tuned on/off for $cnt times...
-    "
+	echo "
+	#####################################################
+	#####wifi has been tuned on/off for $cnt times...
+	#####################################################
+	"
+    if [ ${ERROR_FLAG} -ne 0 ]
+    then
+        exit $cnt
+    fi
 done
 echo "wifi on/off test passed!!"
 end_script
@@ -483,4 +524,6 @@ echo "ping successfully"
 router_connted="yes"
 fi
 }
+
+wifi_dhd_fw_init
 main $1 $2 $3 $4 $5

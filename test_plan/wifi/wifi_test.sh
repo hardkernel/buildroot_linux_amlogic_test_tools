@@ -117,11 +117,19 @@ autoreboot_run()
 
 on_off_source_handle()
 {
-	echo "null"
+   change_wifi_mode  onoff_test 1  0 
+    sync
 }
 on_off_run()
 {
-	echo "null"
+	#load wifi
+    sh /test_plan/wifi/wifi_tool.sh
+    return_value=$?
+	if [ ${return_value} -ne 0 ]
+    then
+		echo "****************wifi test count: ${return_value} end: failure**********"
+        exit 11
+    fi
 }
 
 stability_function()
