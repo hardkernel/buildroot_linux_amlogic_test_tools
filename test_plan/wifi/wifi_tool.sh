@@ -29,6 +29,8 @@ station_6212="firmware_path=/etc/wifi/6212/fw_bcm43438a0.bin nvram_path=/etc/wif
 ap_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag_apsta.bin nvram_path=/etc/wifi/4358/nvram.txt"
 station_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag.bin nvram_path=/etc/wifi/4358/nvram.txt"
 ERROR_FLAG=0
+REALTEK=0
+realtek_value=0
 
 NAME1=wpa_supplicant
 DAEMON1=/usr/sbin/$NAME1
@@ -51,6 +53,25 @@ PIDFILE4=/var/run/${NAME4}-wlan0.pid
 ############################################################################################
 ###############Function Zone################################################################
 ############################################################################################
+function change_config_data()
+{
+    cat /test_plan/wifi/wifi_configure.txt | grep "$1=$2"
+    if [ $? -ne 0 ]
+    then
+        sed -i "s/$1=$3/$1=$2/g" /test_plan/wifi/wifi_configure.txt
+        sync
+    fi
+}
+
+function modify_wifi_config_file()
+{
+    echo "to here 2"
+	change_config_data driver $1 dhd
+    echo "to here 3"
+	change_config_data driver $1 ath10k_pci
+    echo "to here 4"
+	sync
+}
 
 function wifi_dhd_fw_init()
 {
@@ -84,7 +105,23 @@ function wifi_dhd_fw_init()
 			ap_axg=${ap_4358}
 			station_axg=${station_4358}
 			;;
+		0xd723)
+			REALTEK=1
+			realtek_value=8723ds
+			;;
 	esac
+    echo "REALTEK: ${REALTEK}"
+    echo "realtek_value: ${realtek_value}"
+	if [ ${REALTEK} -eq 1 ]
+	then
+        echo "to here"
+		case ${realtek_value} in
+			8723ds)
+                echo "to here 1"
+				modify_wifi_config_file 8723ds
+				;;
+		esac
+	fi
 }
 
 function main() {
@@ -237,10 +274,28 @@ if [ $1 = "0" ];then
 else
 	echo "start driver loading..."
 	HW_PLATFORM=$(cat /proc/device-tree/amlogic-dt-id | awk -F "_" '{print $2}')
-	if [ "$mode" == "ap" -a "$driver" == "dhd" ];then
-		modprobe $driver $ap_axg
+	if [ "$mode" == "ap" -a "$driver" == "dhd" ];then	
+		if [ ${REALTEK} -eq 1 ]
+		then
+			case ${realtek_value} in
+				8723ds)
+						modprobe $driver
+					;;
+			esac
+		else
+			modprobe $driver $ap_axg
+		fi
 	else
-		modprobe $driver $station_axg
+		if [ ${REALTEK} -eq 1 ]
+		then
+			case ${realtek_value} in
+				8723ds)
+						modprobe $driver
+					;;
+			esac			
+		else
+			modprobe $driver $station_axg
+		fi
 	fi
 
 	if [ $? -eq 0 ]; then
