@@ -1,27 +1,47 @@
 #!/bin/sh
 
-###############################
-echo "ddr window test start..."
+function resource_ready()
+{
+	mkdir /sdcard
+	cp /test_plan/ddr/ddr_window/S95ddrtest /etc/init.d/
+	chmod 777 /etc/init.d/S95ddrtest
+	sync
+	reboot -f
+}
 
-###############################
-DDR_WINDOW_DIR=/test_plan/ddr/ddr_window
+function resource_copy()
+{
+	ls /dev/sda1
+	if [ $? -eq 0 ]
+	then
+		mount /dev/sda1 /mnt
+	else
+		mount /dev/sda /mnt
+	fi
+	
+	cd /mnt
+	echo "Please input the No. of platform"
+	read platform
+	mkdir ddr_windows_results_$platform
+	
+	echo "CP start!!"
+	cp /sdcard/ddr_window_* /mnt/ddr_windows_results_$platform/
+	echo "CP sync!!"
+	sync
+	echo "sync stop!!"
+}
 
-kernel_version=$(uname -a | awk '{print $3}')
-ddr_window_path=/lib/modules/${kernel_version}/kernel/drivers/amlogic/ddr_window/ddr_window.ko
+echo "A113 DDR Windows Test,Please input the numbers:
+			1,Start DDR_Windows
+			2.CP the DDR_windows result"
 
-echo "kernel: ${kernel_version}"
-echo "ddr window path: ${ddr_window_path}"
+read cast;
 
-insmod ${ddr_window_path}
-if [ $? -ne 0 ]
-then
-	echo "insmod ddr_window.ko failure"
-	exit 1
-fi
-
-${DDR_WINDOW_DIR}/ddr_window -f &
-if [ $? -ne 0 ]
-then
-	echo "FAILURE: ddr window aplication start error."
-	exit 1
-fi
+case ${cast} in
+	1)
+	resource_ready
+	;;
+	2)
+	resource_copy
+	;;
+esac
