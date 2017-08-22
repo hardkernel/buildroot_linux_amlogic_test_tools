@@ -71,31 +71,31 @@ bl2_down()
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2
 
     #bl2:2
-    flash_erase -N /dev/mtd0 0 4
+    flash_erase -N /dev/mtd0 0x40000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x40000
 
     #bl2:3
-    flash_erase -N /dev/mtd0 0 6
+    flash_erase -N /dev/mtd0 0x80000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x80000
 
     #bl2:4
-    flash_erase -N /dev/mtd0 0 8
+    flash_erase -N /dev/mtd0 0xc0000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0xc0000
 
     #bl2:5
-    flash_erase -N /dev/mtd0 0 10
+    flash_erase -N /dev/mtd0 0x100000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x100000
 
     #bl2:6
-    flash_erase -N /dev/mtd0 0 12
+    flash_erase -N /dev/mtd0 0x140000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x140000
 
     #bl2:7
-    flash_erase -N /dev/mtd0 0 14
+    flash_erase -N /dev/mtd0 0x180000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x180000
 
     #bl2:8
-    flash_erase -N /dev/mtd0 0 16
+    flash_erase -N /dev/mtd0 0x1c0000 2
     nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x1c0000
 }
 
