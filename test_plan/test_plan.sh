@@ -34,6 +34,7 @@ module_choice()
     echo "wifi test:            9"
     echo "ethernet test:        10"
     echo "IR test:              11"
+    echo "QT test:              12"
     echo "*****************************************************"
 
     echo  "please input your test moudle: "
@@ -99,6 +100,12 @@ ir_test()
 {
     sh /test_plan/ir/ir_test.sh
 }
+
+qt_test()
+{
+	sh /test_plan/qt/mipi_test.sh
+}
+
 module_test()
 {
     case ${MODULE_CHOICE} in
@@ -135,8 +142,8 @@ module_test()
         11)
             ir_test
             ;;
-        *)
-            error_handle
+        12)
+            qt_test	
             ;;
     esac
 }
