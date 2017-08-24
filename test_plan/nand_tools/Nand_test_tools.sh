@@ -650,28 +650,32 @@ operation_unifykey()
 }
 
 ReadWrite_unifykey()
-{		
+{
 		local unifykey_error=0
 		#key init
 		echo 1 >  /sys/class/unifykeys/attach
-		
 		#key list
 		set usid mac mac_bt mac_wifi hdcp2_tx hdcp2_rx deviceid
-		
+
 		local KEY_VALUE="123456789"
-		
+
 		for i in $@
 		do
+			cat /sys/class/unifykeys/list | grep $i
+			if [ $? -ne 0 ]
+			then
+				continue
+			fi
 			operation_unifykey $i ${KEY_VALUE}
 			if [ $? -eq 128 ]
 			then
 				let KEY_ERR+=1
 			fi
 		done
-		
+
 		#dele key arr
-		set x;shift	
-		
+		set x;shift
+
 		if [ ${KEY_ERR} -ne 0 ]
 		then
 			let FUNCTION_ERR+=1
