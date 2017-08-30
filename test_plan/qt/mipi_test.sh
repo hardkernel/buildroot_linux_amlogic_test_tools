@@ -81,6 +81,28 @@ kill_all()
 
 trap kill_all INT
 
+qt_32_bit_demo()
+{
+        echo "******************start qt quick test***************"
+        export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
+        export QT_QUICK_BACKEND=softwarecontext
+        /mnt/playerdemo32/playerdemo /mnt/playerdemo32/main.qml &
+        delay 60
+        kill_task playerdemo
+        echo "******************stop qt quick test****************"
+}
+
+qt_64_bit_demo()
+{
+        echo "******************start qt quick test***************"
+        export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
+        export QT_QUICK_BACKEND=softwarecontext
+        /mnt/playerdemo/playerdemo /mnt/playerdemo/main.qml &
+        delay 60
+        kill_task playerdemo
+        echo "******************stop qt quick test****************"
+}
+
 case $TEST_CASE in
     "0")
 	echo ""
@@ -90,6 +112,7 @@ case $TEST_CASE in
 	echo ""
     ;;
     "1")
+	echo 0 > /sys/class/lcd/test
 	echo ""
 	echo "***************start ge2d test(768x1024)***************"
 	rm ge2d_* -rf
@@ -110,6 +133,7 @@ case $TEST_CASE in
         kill_task df_dok
     ;;
     "2")
+	echo 0 > /sys/class/lcd/test
 	echo "******************start qt LinuxFB test***************"
 	export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
 	/usr/lib/qt/examples/widgets/effects/lighting/lighting &
@@ -118,13 +142,15 @@ case $TEST_CASE in
 	echo "******************stop qt LinuxFB test****************"
     ;;
     "3")
-        echo "******************start qt quick test***************"
-        export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
-        export QT_QUICK_BACKEND=softwarecontext
-        /mnt/playerdemo32/playerdemo /mnt/playerdemo32/main.qml &
-        delay 60
-        kill_task playerdemo
-        echo "******************stop qt quick test****************"
+	echo 0 > /sys/class/lcd/test
+	lib_64=/lib64
+	lib_32=/lib32
+	if [ -d  ${lib_64} ]
+	then
+		qt_64_bit_demo
+	else
+		qt_32_bit_demo
+	fi
     ;;
     "q")
 	echo "exit!"
