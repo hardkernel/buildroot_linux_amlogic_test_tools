@@ -17,21 +17,44 @@ info(){
 
 while true
 do
-    aplay -D plug:2to8 /mnt/Hello.wav
+    aplay -D dmixer_auto /mnt/Hello.wav
     info
+    echo "============aplay for wav============"
 
-    aplay -D hw:0,2 /mnt/8ch_full.wav
+    aplay -D dmixer_auto /mnt/8ch_full.wav
     info
+    echo "============aplay for wav============"
 
-    alsaplayer -d plug:2to8 /mnt/Hello.wav
+    alsaplayer -d dmixer_auto /mnt/Hello.wav
     info
+    echo "============alsaplayer for wav============"
 
-    alsaplayer -d plug:2to8 /mnt/Hello.flac
+    alsaplayer -d dmixer_auto /mnt/Hello.flac
     info
+    echo "============alsaplayer for flac============"
 
-    alsaplayer -d plug:2to8 /mnt/Hello.ogg
+    alsaplayer -d dmixer_auto /mnt/Hello.ogg
     info
+    echo "============alsaplayer for ogg============"
 
-    alsaplayer -d plug:2to8 /mnt/Hello.mp3
+    alsaplayer -d dmixer_auto /mnt/Hello.mp3
     info
+    echo "============alsaplayer for mp3============"
+
+    cvlc --play-and-exit --alsa-audio-device dmixer_auto /mnt/Hello.wav
+    info
+    echo "============VLC for wav============"
+
+    cvlc --play-and-exit --alsa-audio-device dmixer_auto /mnt/Hello.mp3
+    info
+    echo "============VLC for mp3============"
+
+    cvlc --play-and-exit --alsa-audio-device dmixer_auto /mnt/Hello.ogg
+    info
+    echo "============VLC for ogg============"
+
+    cvlc --play-and-exit --alsa-audio-device dmixer_auto /mnt/Hello.flac
+    info
+    echo "============VLC for flac============"
+
 done
