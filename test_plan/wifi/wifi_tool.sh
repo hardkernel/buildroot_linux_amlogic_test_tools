@@ -1,10 +1,11 @@
 #!/bin/sh
 ssid="appolo"
 password="Amluser88!!"
+encrypt=psk
 driver="dhd"
 mode="station"
 config_file="/test_plan/wifi/wifi_configure.txt"
-driver_list="dhd ath10k_pci"
+driver_list="dhd ath10k_pci wlan 8723ds"
 router_ip="192.168.168.1"
 router_connted="no"
 ap_ip="192.168.2.1"
@@ -201,6 +202,9 @@ echo "reading from txt...."
 		;;
 		password)
 		password=$val
+		;;
+		encrypt)
+		encrypt=$val
 		;;
 		driver)
 		driver=$val
@@ -506,7 +510,7 @@ wpa_pairwise=TKIP CCMP
 rsn_pairwise=CCMP" >> /etc/hostapd_temp.conf
 fi
 if [ $debug -eq 1 ];then
-    start-stop-daemon -S  -m -p $PIDFILE2  -x $DAEMON2 -- /etc/hostapd_temp.conf -B -P /var/run/hostapd.pid
+    start-stop-daemon -S  -m -p $PIDFILE2  -x $DAEMON2 -- /etc/hostapd_temp.conf -d > /tmp/hostapd.log &
 else
     start-stop-daemon -S -b -m -p $PIDFILE2  -x $DAEMON2 -- /etc/hostapd_temp.conf
 fi
@@ -538,7 +542,7 @@ echo "starting wpa_supplicant..."
 ifconfig wlan0 0.0.0.0
 
 if [ $debug -eq 1 ];then
-	start-stop-daemon -S -m -p $PIDFILE1 -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf -d -B -P $PIDFILE1
+	start-stop-daemon -S -m -p $PIDFILE1  -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf -d > /tmp/wpa_supplicant.log &
 else
 	start-stop-daemon -S -m -p $PIDFILE1 -b -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 fi
@@ -546,8 +550,13 @@ check_in_loop 10 check_wpa
 echo "connecting ap ...."
 id=`wpa_cli add_network | grep -v "interface"`
 wpa_cli set_network $id ssid \"${ssid}\" > /dev/null
-if [ "$password" = "NONE" ]; then
+
+if [ "$encrypt" = "open" ]; then
     wpa_cli set_network $id key_mgmt NONE
+elif [ "$encrypt" = "wpe" ]; then
+    wpa_cli set_network $id key_mgmt NONE
+    wpa_cli set_network $id auth_alg OPEN SHARED
+    wpa_cli set_network $id wep_key0 \"${password}\"
 else
     wpa_cli set_network $id psk \"${password}\" > /dev/null
 fi
