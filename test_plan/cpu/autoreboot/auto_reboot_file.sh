@@ -9,7 +9,21 @@ if [ ! -f ${REBOOT_COUNT_FILE} ]
 then
 	exit 17
 fi
-		
+
+reboot_handle()
+{
+	read -t 3 BREAK_FLAG
+	if [ $? -eq 0 ]
+	then
+	    rm ${REBOOT_COUNT_FILE}
+	    sync
+	    exit 0
+	else
+	    #continue reboot
+	    reboot -f
+	    fi
+}
+
 #read reboot count is 0 or not
 current_reboot_count=$(cat ${REBOOT_COUNT_FILE} | awk -F  = '{print $2}')
 if [ ${current_reboot_count} -gt 0 ]
@@ -19,7 +33,7 @@ then
 	#rewrite reboot count
 	echo "reboot_count=${current_reboot_count}" > ${REBOOT_COUNT_FILE}
 	#continue reboot
-	reboot -f
+	reboot_handle
 elif [  ${current_reboot_count} -eq 0 ]
 then
 	rm ${REBOOT_COUNT_FILE}

@@ -24,7 +24,7 @@ change_config_data()
 
 change_wifi_mode()
 {
-    change_config_data $1 $2 $3 
+    change_config_data $1 $2 $3
 }
 
 wifi_mode()
@@ -117,7 +117,7 @@ autoreboot_run()
 
 on_off_source_handle()
 {
-   change_wifi_mode  onoff_test 1  0 
+   change_wifi_mode  onoff_test 1  0
     sync
 }
 on_off_run()
@@ -203,13 +203,26 @@ wifi_test()
     esac
 }
 
+reboot_handle()
+{
+	read -t 3 BREAK_FLAG
+	if [ $? -eq 0 ]
+	then
+	    rm ${AUTO_REBOOT_FLAG_FILE}
+	    sync
+	    exit 0
+	else
+		reboot -f
+	fi
+}
+
 stabilit_reboot_run()
 {
 	CURRENT_REBOOT_COUNT=`cat ${AUTO_REBOOT_FLAG_FILE}`
 	let CURRENT_REBOOT_COUNT+=1
 	echo "${CURRENT_REBOOT_COUNT}" > ${AUTO_REBOOT_FLAG_FILE}
 	autoreboot_run_step  ${CURRENT_REBOOT_COUNT}
-	reboot -f
+	reboot_handle
 }
 
 if [ -f ${AUTO_REBOOT_FLAG_FILE} ]
