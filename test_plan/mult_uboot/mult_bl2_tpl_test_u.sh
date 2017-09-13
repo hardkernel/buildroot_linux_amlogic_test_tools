@@ -47,7 +47,7 @@ read_u_env_value()
     if [ "${ALL_FLAG}" == "" ]
     then
         return 4
-    fi	
+    fi
 }
 
 first_init_u_disk_mult_file()
@@ -55,12 +55,12 @@ first_init_u_disk_mult_file()
 	echo "TARGET=BL2" > /mnt/mult_uboot_flag_file
 	echo "TARGET_OP=erase" >>  /mnt/mult_uboot_flag_file
 	echo "TARGET_PER=1" >>  /mnt/mult_uboot_flag_file
-    echo "ALL_FLAG=NULL" >>  /mnt/mult_uboot_flag_file	
+    echo "ALL_FLAG=NULL" >>  /mnt/mult_uboot_flag_file
 }
 
 lava_success()
 {
-   lava-test-case SYSTEM --result pass 
+   lava-test-case SYSTEM --result pass
 }
 
 
@@ -112,10 +112,10 @@ tpl_down()
     #tpl:3
     flash_erase -N /dev/mtd1 4194304  16
     nandwrite /dev/mtd1 ${MULT_IMG}/u-boot.bin.usb.tpl  --start=0x400000 -p
-    
+
     #tpl:4
     flash_erase -N /dev/mtd1 6291456  16
-    nandwrite /dev/mtd1 ${MULT_IMG}/u-boot.bin.usb.tpl  --start=0x600000 -p 
+    nandwrite /dev/mtd1 ${MULT_IMG}/u-boot.bin.usb.tpl  --start=0x600000 -p
 }
 
 handle_download_all_after()
@@ -123,7 +123,7 @@ handle_download_all_after()
     echo "TARGET=BL2" > /mnt/mult_uboot_flag_file
     echo "TARGET_OP=erase" >>  /mnt/mult_uboot_flag_file
     echo "TARGET_PER=1" >>  /mnt/mult_uboot_flag_file
-    echo "ALL_FLAG=NULL" >>  /mnt/mult_uboot_flag_file  
+    echo "ALL_FLAG=NULL" >>  /mnt/mult_uboot_flag_file
     sync
 
     #release u disk
@@ -163,7 +163,7 @@ write_value_to_env()
 	echo "TARGET=${TARGET}" > /mnt/mult_uboot_flag_file
 	echo "TARGET_OP=${TARGET_OP}" >>  /mnt/mult_uboot_flag_file
 	echo "TARGET_PER=${TARGET_PER}" >>  /mnt/mult_uboot_flag_file
-	echo "ALL_FLAG=${ALL_FLAG}" >>  /mnt/mult_uboot_flag_file	
+	echo "ALL_FLAG=${ALL_FLAG}" >>  /mnt/mult_uboot_flag_file
 	sync
 }
 
@@ -196,7 +196,7 @@ env_value_change()
     TARGET=$1
     TARGET_OP=$2
     TARGET_PER=$3
-    
+
     if [ $# == 4 ]
     then
         ALL_FLAG=$4
@@ -205,12 +205,12 @@ env_value_change()
 	fi
 
     #write value to env
-    write_value_to_env 
-	
+    write_value_to_env
+
 	#log handle
 	echo "next process: TARGET:$1 TARGET_OP:$2 TARGET_PER:$3" >> ${LOG_FILE}
-	
-	#release u disk 
+
+	#release u disk
 	umount /mnt
 	sync
 	sleep 1
@@ -222,30 +222,30 @@ bl2_erase()
     case ${TARGET_PER} in
         1)
             flash_erase -N /dev/mtd0 0 2
-            env_value_change BL2 erase 2  
+            env_value_change BL2 erase 2
             ;;
         2)
-            flash_erase -N /dev/mtd0 0 4
+            flash_erase -N /dev/mtd0 0x40000 2
             env_value_change BL2 erase 3
             ;;
         3)
-            flash_erase -N /dev/mtd0 0 6
+            flash_erase -N /dev/mtd0 0x80000 2
             env_value_change BL2 erase 4
             ;;
         4)
-            flash_erase -N /dev/mtd0  0 8
+            flash_erase -N /dev/mtd0  0xC0000 2
             env_value_change BL2 erase 5
             ;;
         5)
-            flash_erase -N /dev/mtd0 0 10
+            flash_erase -N /dev/mtd0 0x100000 2
             env_value_change BL2 erase 6
             ;;
         6)
-            flash_erase -N /dev/mtd0 0 12
+            flash_erase -N /dev/mtd0 0x140000 2
             env_value_change BL2 erase 7
             ;;
         7)
-            flash_erase -N /dev/mtd0 0 14
+            flash_erase -N /dev/mtd0 0x180000 2
             env_value_change BL2 erase 8
             ;;
         8)
@@ -267,32 +267,32 @@ bl2_baddata()
             env_value_change BL2 baddata 2
             ;;
         2)
-            flash_erase -N /dev/mtd0 0 4
+            flash_erase -N /dev/mtd0 0x40000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0x60000
             env_value_change BL2 baddata 3
             ;;
         3)
-            flash_erase -N /dev/mtd0 0 6
+            flash_erase -N /dev/mtd0 0x80000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0xA0000
             env_value_change BL2 baddata 4
             ;;
         4)
-            flash_erase -N /dev/mtd0 0 8
+            flash_erase -N /dev/mtd0 0xC0000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0xE0000
             env_value_change BL2 baddata 5
             ;;
         5)
-            flash_erase -N /dev/mtd0 0 10
+            flash_erase -N /dev/mtd0 0x100000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0x120000
             env_value_change BL2 baddata 6
             ;;
         6)
-            flash_erase -N /dev/mtd0 0 12
+            flash_erase -N /dev/mtd0 0x140000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0x160000
             env_value_change BL2 baddata 7
             ;;
         7)
-            flash_erase -N /dev/mtd0 0 14
+            flash_erase -N /dev/mtd0 0x180000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/boot.img  --input-size=0x1A0000
             env_value_change BL2 baddata 8
             ;;
@@ -315,32 +315,32 @@ bl2_halfdata()
             env_value_change BL2 halfdata 2
             ;;
         2)
-            flash_erase -N /dev/mtd0 0 4
+            flash_erase -N /dev/mtd0 0x40000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x40000 --input-size=0x8000
             env_value_change BL2 halfdata 3
             ;;
         3)
-            flash_erase -N /dev/mtd0 0 6
+            flash_erase -N /dev/mtd0 0x80000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x80000 --input-size=0x8000
             env_value_change BL2 halfdata 4
             ;;
         4)
-            flash_erase -N /dev/mtd0 0 8
+            flash_erase -N /dev/mtd0 0xC0000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0xc0000 --input-size=0x8000
             env_value_change BL2 halfdata 5
             ;;
         5)
-            flash_erase -N /dev/mtd0 0 10
+            flash_erase -N /dev/mtd0 0x100000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x100000 --input-size=0x8000
             env_value_change BL2 halfdata 6
             ;;
         6)
-            flash_erase -N /dev/mtd0 0 12
+            flash_erase -N /dev/mtd0 0x140000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x140000 --input-size=0x8000
             env_value_change BL2 halfdata 7
             ;;
         7)
-            flash_erase -N /dev/mtd0 0 14
+            flash_erase -N /dev/mtd0 0x180000 2
             nandwrite /dev/mtd0 ${MULT_IMG}/u-boot.bin.usb.bl2  --start=0x180000 --input-size=0x8000
             env_value_change BL2 halfdata 8
             ;;
@@ -428,13 +428,13 @@ erase_all()
 {
     #bl2
     flash_erase -N /dev/mtd0 0 2
-    flash_erase -N /dev/mtd0 0 4
-    flash_erase -N /dev/mtd0 0 6
-    flash_erase -N /dev/mtd0 0 8 
-    flash_erase -N /dev/mtd0 0 10
-    flash_erase -N /dev/mtd0 0 12
-    flash_erase -N /dev/mtd0 0 14
-    flash_erase -N /dev/mtd0 0 16
+    flash_erase -N /dev/mtd0 0x40000 2
+    flash_erase -N /dev/mtd0 0x80000 2
+    flash_erase -N /dev/mtd0 0xC0000 2
+    flash_erase -N /dev/mtd0 0x100000 2
+    flash_erase -N /dev/mtd0 0x140000 2
+    flash_erase -N /dev/mtd0 0x180000 2
+    flash_erase -N /dev/mtd0 0x1C0000 2
 
     #tpl
     flash_erase -N /dev/mtd1 0 16
@@ -515,14 +515,14 @@ u_disk_init()
 {
 	#umont
 	#umount /mnt
-	
+
 	#mount sda1
 	ls /dev/sda1
 	while [ $? -ne 0 ]
 	do
-		ls /dev/sda1 
+		ls /dev/sda1
 	done
-	
+
 	mount /dev/sda1 /mnt
 }
 
