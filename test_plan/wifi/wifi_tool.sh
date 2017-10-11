@@ -285,7 +285,7 @@ else
 
 	##########check wlan0############################
 	echo "checking wlan0..."
-	check_in_loop 10 check_wlan
+	check_in_loop 15 check_wlan
 	echo "wlan0 shows up
 	"
 fi
@@ -489,7 +489,7 @@ else
     start-stop-daemon -S -b -m -p $PIDFILE2  -x $DAEMON2 -- /etc/hostapd_temp.conf
 fi
 
-check_in_loop 6 check_hostapd
+check_in_loop 15 check_hostapd
 echo "start hostpad successfully!!
 "
 ##remove temp conf if debug is off##########
@@ -506,7 +506,7 @@ echo "ap_ip=$ap_ip"
 
 start-stop-daemon -S -m -p $PIDFILE3 -b -x $DAEMON3  -- -iwlan0  --dhcp-option=3,${ap_ip} --dhcp-range=${ap_ip%.*}.50,${ap_ip%.*}.200,12h -p100
 
-check_in_loop 6 check_dnsmasq
+check_in_loop 15 check_dnsmasq
 echo "start dnsmasq successfully!!"
 }
 
@@ -520,7 +520,7 @@ if [ $debug -eq 1 ];then
 else
 	start-stop-daemon -S -m -p $PIDFILE1 -b -x $DAEMON1 -- -Dnl80211 -iwlan0 -c/etc/wpa_supplicant.conf
 fi
-check_in_loop 10 check_wpa
+check_in_loop 20 check_wpa
 echo "connecting ap ...."
 id=`wpa_cli add_network | grep -v "interface"`
 wpa_cli set_network $id ssid \"${ssid}\" > /dev/null
@@ -537,7 +537,7 @@ fi
 wpa_cli select_network $id  > /dev/null
 wpa_cli enable_network $id  > /dev/null
 
-check_in_loop 10 check_ap_connect
+check_in_loop 30 check_ap_connect
 echo "start wpa_supplicant successfully!!"
 
 ############start dhcp#######################
