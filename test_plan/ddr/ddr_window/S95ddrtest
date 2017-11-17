@@ -10,8 +10,20 @@ function start_ddrwin()
 	###############################
 	DDR_WINDOW_DIR=/test_plan/ddr/ddr_window
 	kernel_version=$(uname -a | awk '{print $3}')
-	ddr_window_path=/lib/modules/${kernel_version}/kernel/drivers/amlogic/ddr_window/ddr_window.ko
+	ddr_window_path_buildroot=/lib/modules/${kernel_version}/kernel/drivers/amlogic/ddr_window/ddr_window.ko
+	ddr_window_path_lede=/lib/modules/${kernel_version}/ddr_window.ko
 	echo "kernel: ${kernel_version}"
+	
+	build_env=$(uname -a | awk '{print $2}')
+	case ${build_env} in
+	  "LEDE")
+		ddr_window_path=${ddr_window_lede}
+		;;
+	  "buildroot")
+		ddr_window_path=${ddr_window_buildroot}
+		;;
+	esac
+		
 	echo "ddr window path: ${ddr_window_path}"
 	insmod ${ddr_window_path}
 	if [ $? -ne 0 ]
