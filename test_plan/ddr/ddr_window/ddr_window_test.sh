@@ -31,54 +31,39 @@ function resource_copy()
 	echo "sync stop!!"
 }
 
+function resource_ready_lede()
+{
+	mkdir /sdcard
+	cp /test_plan/ddr/ddr_window/ddrtest_lede /etc/init.d/ddrtest
+	chmod 777 /etc/init.d/ddrtest
+	ln -s /etc/init.d/ddrtest /etc/rc.d/S95ddrtest
+	sync
+	reboot -f
+		
+}
+
+
 echo "A113 DDR Windows Test,Please input the numbers:
 			1,Start DDR_Windows
 			2.CP the DDR_windows result"
 
 read cast;
 
-ddr_window_test_lede()
-{
-        ###############################
-        echo "ddr window test start..."
-        ###############################
-        DDR_WINDOW_DIR=/test_plan/ddr/ddr_window
-        kernel_version=$(uname -a | awk '{print $3}')
-        ddr_window_path=/lib/modules/${kernel_version}/ddr_window.ko
-        echo "kernel: ${kernel_version}"
-        echo "ddr window path: ${ddr_window_path}"
-        insmod ${ddr_window_path}
-        if [ $? -ne 0 ]
-        then
-                echo "insmod ddr_window.ko failure"
-                exit 1
-        fi
-        ${DDR_WINDOW_DIR}/memcpy_test -f &
-        if [ $? -ne 0 ]
-        then
-                echo "FAILURE: memcpy_test aplication start error."
-                exit 1
-        fi
-        ${DDR_WINDOW_DIR}/ddr_window -f &
-        if [ $? -ne 0 ]
-        then
-                echo "FAILURE: ddr window aplication start error."
-                exit 1
-        fi
 
-}
 
-platform_handle()
+
+function platform_handle()
 {
 	build_env=$(uname -a | awk '{print $2}')
 	case ${build_env} in
 	  "LEDE")
-		ddr_window_test_lede
+		resource_ready_lede
 		;;
 	  "buildroot")
 		resource_ready
 		;;
 	esac
+
 }
 
 case ${cast} in
