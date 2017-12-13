@@ -29,6 +29,8 @@ ap_6212="firmware_path=/etc/wifi/6212/fw_bcm43438a0_apsta.bin nvram_path=/etc/wi
 station_6212="firmware_path=/etc/wifi/6212/fw_bcm43438a0.bin nvram_path=/etc/wifi/6212/nvram.txt"
 ap_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag_apsta.bin nvram_path=/etc/wifi/4358/nvram.txt"
 station_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag.bin nvram_path=/etc/wifi/4358/nvram.txt"
+ap_6398="firmware_path=/etc/wifi/AP6398/fw_bcm4359c0_ag_apsta.bin nvram_path=/etc/wifi/AP6398/nvram.txt"
+station_6398="firmware_path=/etc/wifi/AP6398/fw_bcm4359c0_ag.bin nvram_path=/etc/wifi/AP6398/nvram.txt"
 ERROR_FLAG=0
 
 NAME1=wpa_supplicant
@@ -101,6 +103,10 @@ function wifi_dhd_fw_init()
 		0xaa31)
 			ap_axg=${ap_4358}
 			station_axg=${station_4358}
+			;;
+		0x4359)
+			ap_axg=${ap_6398}
+			station_axg=${station_6398}
 			;;
 		0x0701)
 			echo "qca9377 detected!!"
