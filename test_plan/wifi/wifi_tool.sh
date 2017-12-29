@@ -31,7 +31,9 @@ ap_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag_apsta.bin nvram_path=/etc/wi
 station_4358="firmware_path=/etc/wifi/4358/fw_bcm4358_ag.bin nvram_path=/etc/wifi/4358/nvram.txt"
 ap_6398="firmware_path=/etc/wifi/AP6398/fw_bcm4359c0_ag_apsta.bin nvram_path=/etc/wifi/AP6398/nvram.txt"
 station_6398="firmware_path=/etc/wifi/AP6398/fw_bcm4359c0_ag.bin nvram_path=/etc/wifi/AP6398/nvram.txt"
+station_9377="country_code=CN"
 ERROR_FLAG=0
+module_pid_file="/sys/bus/mmc/devices/sdio:0001/sdio:0001:1/device"
 
 NAME1=wpa_supplicant
 DAEMON1=/usr/sbin/$NAME1
@@ -54,27 +56,22 @@ PIDFILE4=/var/run/${NAME4}-wlan0.pid
 ############################################################################################
 ###############Function Zone################################################################
 ############################################################################################
-function change_config_data()
-{
-    cat /test_plan/wifi/wifi_configure.txt | grep "$1=$2"
-    if [ $? -ne 0 ]
-    then
-        sed -i "s/$1=$3/$1=$2/g" /test_plan/wifi/wifi_configure.txt
-        sync
-    fi
-}
 
 function modify_wifi_config_file()
 {
 	echo "change driver to $1"
-	change_config_data driver $1 dhd
-	change_config_data driver $1 ath10k_pci
+	sed -i -e "/driver=/adriver=$1" -e "/driver=/d" /test_plan/wifi/wifi_configure.txt
 	sync
 }
 
 function wifi_dhd_fw_init()
 {
-	code=`cat /sys/bus/mmc/devices/sdio\:0001/sdio\:0001\:1/device`
+
+	if [ ! -f ${module_pid_file} ];then
+		wifi_power 1
+		sleep 2
+	fi
+	code=`cat ${module_pid_file}`
     case ${code} in
 		0xa962)
 			ap_axg=${ap_40181}
@@ -111,7 +108,7 @@ function wifi_dhd_fw_init()
 		0x0701)
 			echo "qca9377 detected!!"
 			ap_axg=""
-			station_axg=""
+			station_axg=${station_9377}
 			modify_wifi_config_file wlan
 			;;
 		0xd723)
@@ -543,7 +540,7 @@ fi
 wpa_cli select_network $id  > /dev/null
 wpa_cli enable_network $id  > /dev/null
 
-check_in_loop 30 check_ap_connect
+check_in_loop 180 check_ap_connect
 echo "start wpa_supplicant successfully!!"
 
 ############start dhcp#######################
