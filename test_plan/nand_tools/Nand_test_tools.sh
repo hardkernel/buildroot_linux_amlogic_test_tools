@@ -1143,8 +1143,9 @@ function_test()
 			#ReadWrite_dtb
 			# env
 		    ReadWrite_env_all
+		
 			#unifykey
-			#ReadWrite_unifykey
+			ReadWrite_unifykey
 			#system
 			ReadWrite_system
 		fi
@@ -1387,7 +1388,7 @@ stability_read()
 		#stability_dtb
 		
 		#read unifykeys
-		#stability_unifykey
+		stability_unifykey
 
 		
 		#system
