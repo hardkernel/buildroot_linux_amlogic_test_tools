@@ -692,12 +692,12 @@ ReadWrite_dtb()
 		#NEW_DTB=/usb_mount/dtb_new
 		
 		#write dtb
-		dd if=${OLD_DTB} of=/dev/dtb
-		if [ $? -ne 0 ]
-		then
-			echo "write dtb error: from ${ERROR_LOG_FILE} to /dev/dtb"  >> ${ERROR_LOG_FILE}
-			let  dtb_error+=1	
-		fi
+		#dd if=${OLD_DTB} of=/dev/dtb
+		#if [ $? -ne 0 ]
+		#then
+		#	echo "write dtb error: from ${ERROR_LOG_FILE} to /dev/dtb"  >> ${ERROR_LOG_FILE}
+		#	let  dtb_error+=1	
+		#fi
 		
 		#read dtb
 		dd if=/dev/dtb of=${SOURCE_DTB}
@@ -1110,6 +1110,25 @@ Clean_resource()
 		#umount /usb_mount		
 }
 
+#Read efuse
+Read_efuse()
+{
+	efuse_dir=/sys/class/efuse
+	echo "----------------efuse test:start-------------"
+	set userdata usid mac mac_bt mac_wifi
+	for i in $@
+	do	
+		cat ${efuse_dir}/$i
+		if [ $? -ne 0 ]
+		then
+			echo "eufse $i  error"
+			exit 1	
+		fi
+	done
+	echo "----------------efuse test:end-------------"
+	
+}
+
 #function test
 function_test()
 {
@@ -1140,7 +1159,8 @@ function_test()
 		elif [ "${Platform}"x  == "A113"x ]
 		then
 			# dtb
-			#ReadWrite_dtb
+			ReadWrite_dtb
+			
 			# env
 		    ReadWrite_env_all
 		
@@ -1148,6 +1168,10 @@ function_test()
 			ReadWrite_unifykey
 			#system
 			ReadWrite_system
+			
+			#read efuse
+			Read_efuse
+
 		fi
 }
 #####################################################function test(end)################################################

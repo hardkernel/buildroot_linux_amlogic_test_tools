@@ -97,10 +97,32 @@ qt_64_bit_demo()
         echo "******************start qt quick test***************"
         export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
         export QT_QUICK_BACKEND=softwarecontext
-        /mnt/playerdemo/playerdemo /mnt/playerdemo/main.qml &
-        delay 60
+        /mnt/DemoQPainter32/DemoQPainter32 /mnt/DemoQPainter32/main.qml &
+		delay 60
         kill_task playerdemo
         echo "******************stop qt quick test****************"
+}
+
+qt_quick_test()
+{
+	echo "current system is $1 bit"
+    export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
+    export QT_QUICK_BACKEND=softwarecontext
+    /mnt/QT/$1/qt_quick/DemoQPainter /mnt/QT/$1/qt_quick/main.qml &
+	delay 60
+	kill_task DemoQPainter
+
+}
+
+qt_fb_test()
+{
+	echo "current system is $1 bit"
+    export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
+    export QT_QUICK_BACKEND=softwarecontext
+    /mnt/QT/$1/qt_fb/lighting  &
+	delay 60
+	kill_task lighting
+
 }
 
 case $TEST_CASE in
@@ -133,12 +155,21 @@ case $TEST_CASE in
         kill_task df_dok
     ;;
     "2")
-	echo 0 > /sys/class/lcd/test
+	#echo 0 > /sys/class/lcd/test
 	echo "******************start qt LinuxFB test***************"
-	export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
-	/usr/lib/qt/examples/widgets/effects/lighting/lighting &
-	delay 60
-	kill_task lighting
+	lib_64=/lib64
+	lib_32=/lib32
+	if [ -d  ${lib_64} ]
+	then
+		qt_fb_test 64
+	else
+		qt_fb_test 32
+	fi
+	#export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0
+    #export QT_QUICK_BACKEND=softwarecontext
+	#/usr/lib/qt/examples/widgets/effects/lighting/lighting &
+	#delay 60
+	#kill_task lighting
 	echo "******************stop qt LinuxFB test****************"
     ;;
     "3")
@@ -147,9 +178,10 @@ case $TEST_CASE in
 	lib_32=/lib32
 	if [ -d  ${lib_64} ]
 	then
-		qt_64_bit_demo
+		#qt_64_bit_demo
+		qt_quick_test 64
 	else
-		qt_32_bit_demo
+		qt_quick_test 32
 	fi
     ;;
     "q")
