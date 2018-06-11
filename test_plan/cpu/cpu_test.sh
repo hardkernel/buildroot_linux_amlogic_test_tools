@@ -61,7 +61,7 @@ cpu_test()
         cpu_suspend_resume_test
     elif [ ${CPU_TEST_CASE} -eq 5  ]
     then
-        cpu_thermal_rest
+        cpu_thermal_test
     fi
 }
 info_view
